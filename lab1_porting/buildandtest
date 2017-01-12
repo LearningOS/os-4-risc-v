@@ -1,7 +1,8 @@
 #!/bin/bash
 make clean
 make
-riscv64-unknown-elf-objdump -S bin/kernel > kern.asm
-riscv64-unknown-elf-objdump -h bin/kernel > kern.h
+riscv32-unknown-elf-objdump -S bin/kernel > kern.asm
+riscv32-unknown-elf-objdump -h bin/kernel > kern.h
+spike bin/kernel
 
 

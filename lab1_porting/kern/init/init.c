@@ -21,7 +21,7 @@ kern_init(void){
     memset(edata, 0, end - edata);
    // asm volatile("csrc mstatus,6");
     //asm volatile("csrs mstatus,4");
-	lab1_switch_test();
+	//lab1_switch_test();
     //cons_init();                // init the console
 
     const char *message = "(THU.CST) os is loading ...";

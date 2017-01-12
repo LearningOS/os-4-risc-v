@@ -23,7 +23,7 @@ GCCPREFIX := riscv32-unknown-elf-
 #endif
 
 # try to infer the correct QEMU
-QEMU := xspike
+QEMU := spike
 #ifndef QEMU
 #QEMU := $(shell if which qemu-system-i386 > /dev/null; \
 	then echo 'qemu-system-i386'; exit; \
@@ -43,11 +43,11 @@ QEMU := xspike
 .DELETE_ON_ERROR:
 
 # define compiler and flags
-CCPATH	= /home/maarten.in_t.hout/riscv-build
+#CCPATH	= /home/maarten.in_t.hout/riscv-build
 #LIBS	 = -L$(CCPATH)/lib/gcc/$(TARGET)/$(GCCVER) \
 #		   -L$(CCPATH)/$(TARGET)/lib	\
 		   #-lc
-WARNINGS= -Wall 
+#WARNINGS= -Wall 
 
 HOSTCC		:= gcc
 HOSTCFLAGS	:= -g -Wall -O2

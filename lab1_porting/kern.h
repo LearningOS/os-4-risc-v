@@ -1,9 +1,9 @@
 
-bin/kernel：     文件格式 elf32-littleriscv
+bin/kernel:     file format elf32-littleriscv
 
-节：
+Sections:
 Idx Name          Size      VMA       LMA       File off  Algn
-  0 .text         00004d5c  00000000  00000000  00001000  2**6
+  0 .text         00004d60  00000000  00000000  00001000  2**6
                   CONTENTS, ALLOC, LOAD, READONLY, CODE
   1 .rodata       00000998  08000000  08000000  00006000  2**2
                   CONTENTS, ALLOC, LOAD, READONLY, DATA
@@ -11,9 +11,9 @@ Idx Name          Size      VMA       LMA       File off  Algn
                   CONTENTS, ALLOC, LOAD, DATA
   3 .sbss2        00000002  0800099a  0800099a  0000699a  2**0
                   ALLOC
-  4 .stab         00000001  00004d5c  00004d5c  00005d5c  2**0
+  4 .stab         00000001  00004d60  00004d60  00005d60  2**0
                   CONTENTS, ALLOC, LOAD, DATA
-  5 .stabstr      00000001  00004d5d  00004d5d  00005d5d  2**0
+  5 .stabstr      00000001  00004d61  00004d61  00005d61  2**0
                   CONTENTS, ALLOC, LOAD, DATA
   6 .data         00000594  0800099c  0800099c  0000699c  2**2
                   CONTENTS, ALLOC, LOAD, DATA

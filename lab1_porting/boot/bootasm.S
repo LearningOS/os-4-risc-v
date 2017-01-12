@@ -185,7 +185,9 @@ write_stack_pattern:
 init_stack:
     /* set stack pointer */
     la	sp, _stack
-
+    li t0, 0x100000
+	csrs mstatus, t0
+	#csrc mstatus, 4
 	j kern_init
 
 /* When trap is an interrupt, this function is called */
