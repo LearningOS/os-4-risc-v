@@ -7,15 +7,17 @@
 
 /* *
  * cputch - writes a single character @c to stdout, and it will
+
  * increace the value of counter pointed by @cnt.
  * */
+char buf[64];// __attribute__((aligned(64)));
 static void
 cputch(int c, int *cnt) {
     //cons_putc(c);
-	char buf[64] __attribute__((aligned(64)));
-	int buflen = 0;
-	buf[buflen++] = c;
-	syscall(SYS_write, 1, (long) buf, buflen);
+	//char buf[64] __attribute__((aligned(64)));
+	//int buflen = 0;
+	buf[0] = c;
+	syscall(SYS_write, 1, (long) buf, 1);
 	(*cnt) ++;
 }
 

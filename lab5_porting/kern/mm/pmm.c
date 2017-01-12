@@ -336,7 +336,7 @@ pmm_init(void) {
     boot_pgdir = boot_alloc_page();
     memset(boot_pgdir, 0, PGSIZE);
     boot_cr3 = PADDR(boot_pgdir);
-//    cprintf("boot_cr3=%08x\n",boot_cr3);
+
     check_pgdir();
 
 
@@ -350,7 +350,7 @@ pmm_init(void) {
     //But shouldn't use this map until enable_paging() & gdt_init() finished.
     boot_map_segment(boot_pgdir, 0, KMEMSIZE, 0, PTE_TYPE_URWX_SRWX | PTE_R | PTE_V);
     boot_pgdir[PDX(VPT)] = PADDR(boot_pgdir) | PTE_TYPE_TABLE | PTE_R | PTE_V;
-
+   // pgdir_alloc_page(boot_pgdir, USTACKTOP-PGSIZE , PTE_TYPE_URW_SRW);
     //cprintf("haha2\n");
     //temporary map: 
     //virtual_addr 3G~3G+4M = linear_addr 0~4M = linear_addr 3G~3G+4M = phy_addr 0~4M     
@@ -560,6 +560,7 @@ copy_range(pde_t *to, pde_t *from, uintptr_t start, uintptr_t end, bool share) {
         struct Page *page = pte2page(*ptep);
         // alloc a page for process B
         struct Page *npage=alloc_page();
+        //cprintf("npage=%08x\n",npage);
         assert(page!=NULL);
         assert(npage!=NULL);
         int ret=0;
@@ -579,6 +580,7 @@ copy_range(pde_t *to, pde_t *from, uintptr_t start, uintptr_t end, bool share) {
          */
         void * kva_src = page2kva(page);
         void * kva_dst = page2kva(npage);
+       // cprintf("kva_src=%08x, kva_dst=%08x\n",kva_src,kva_dst);
 
         memcpy(kva_dst, kva_src, PGSIZE);
 
@@ -735,7 +737,7 @@ check_pgdir(void) {
 
     struct Page *p1, *p2;
     p1 = alloc_page();
-    cprintf("p1=%08x\n\n\n",page2pa(p1));
+
  //   cprintf("insert begin\n");
     assert(page_insert(boot_pgdir, p1, 0x0, 0) == 0);
 
@@ -811,6 +813,8 @@ check_boot_pgdir(void) {
 
     strcpy((void *)0x40000100, str);
     assert(strcmp((void *)0x40000100, (void *)(0x40000100 + PGSIZE)) == 0);
+    cprintf("%s\n\n",(char*)0x40000100);
+    //cprintf("mstatus=%08x\n",read_mstatus_field(MSTATUS_PRV));
 //    cprintf("bageyalusilasiladi%s\n",((char*)0x40000100));
     *(char *)(page2kva(p) + 0x100) = '\0';
     //asm volatile("nop");

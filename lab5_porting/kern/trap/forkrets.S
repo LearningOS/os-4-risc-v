@@ -60,8 +60,8 @@
 .globl rforkrets
 rforkrets:
 
-	LOAD	x1, 32* REGBYTES(a0)
 
+	LOAD	x1, 32* REGBYTES(a0)
 	LOAD	x3, 2 * REGBYTES(a0)
 	LOAD	x4, 3 * REGBYTES(a0)
 	LOAD	x5, 4 * REGBYTES(a0)
@@ -94,10 +94,53 @@ rforkrets:
 	LOAD    t2, 31* REGBYTES(a0)
 	csrw    sstatus, t2
 	LOAD 	t2, 1*REGBYTES(a0)
-	li      t3, -1
 	blt	 	t2, x0, eforkret
-	mv	    x2, t2
-	LOAD    t2, 0* REGBYTES(a0)
-	li   	t3, 1
+	mv	    sp, t2
 eforkret:
 	ret
+
+.globl urforkrets
+urforkrets:
+	LOAD	t2, 32* REGBYTES(a0)
+	csrw	mepc, t2
+
+	LOAD	x1, 32* REGBYTES(a0)
+	LOAD	x3, 2 * REGBYTES(a0)
+	LOAD	x4, 3 * REGBYTES(a0)
+	LOAD	x5, 4 * REGBYTES(a0)
+	LOAD	x6, 5 * REGBYTES(a0)
+	LOAD	x7, 6 * REGBYTES(a0)
+	LOAD	x8, 7 * REGBYTES(a0)
+	LOAD	x9, 8 * REGBYTES(a0)
+
+	LOAD	x11, 10 * REGBYTES(a0)
+	LOAD	x12, 11 * REGBYTES(a0)
+	LOAD	x13, 12 * REGBYTES(a0)
+	LOAD	x14, 13 * REGBYTES(a0)
+	LOAD	x15, 14 * REGBYTES(a0)
+	LOAD	x16, 15 * REGBYTES(a0)
+	LOAD	x17, 16 * REGBYTES(a0)
+	LOAD	x18, 17 * REGBYTES(a0)
+	LOAD	x19, 18 * REGBYTES(a0)
+	LOAD	x20, 19 * REGBYTES(a0)
+	LOAD	x21, 20 * REGBYTES(a0)
+	LOAD	x22, 21 * REGBYTES(a0)
+	LOAD	x23, 22 * REGBYTES(a0)
+	LOAD	x24, 23 * REGBYTES(a0)
+	LOAD	x25, 24 * REGBYTES(a0)
+	LOAD	x26, 25 * REGBYTES(a0)
+	LOAD	x27, 26 * REGBYTES(a0)
+	LOAD	x28, 27 * REGBYTES(a0)
+	LOAD	x29, 28 * REGBYTES(a0)
+	LOAD	x30, 29 * REGBYTES(a0)
+	LOAD	x31, 30 * REGBYTES(a0)
+	/*LOAD    t2, 31* REGBYTES(a0)*/
+	/*csrw    mstatus, t2*/
+	LOAD 	t2, 1*REGBYTES(a0)
+	li      t3, -1
+	blt	 	t2, x0, ueforkret
+	mv	    sp, t2
+	LOAD    t2, 0* REGBYTES(a0)
+	li   	t3, 1
+ueforkret:
+	eret

@@ -3,13 +3,13 @@ bin/kernel:     file format elf32-littleriscv
 
 Sections:
 Idx Name          Size      VMA       LMA       File off  Algn
-  0 .text         00011a7c  00000100  00000100  00000100  2**6
+  0 .text         00011dac  00000100  00000100  00000100  2**6
                   CONTENTS, ALLOC, LOAD, READONLY, CODE
-  1 .rodata       00002d28  00011b7c  00011b7c  00011b7c  2**2
+  1 .rodata       00002e6c  00011eac  00011eac  00011eac  2**2
                   CONTENTS, ALLOC, LOAD, READONLY, DATA
-  2 .stab         00000001  000148a4  000148a4  000148a4  2**0
+  2 .stab         00000001  00014d18  00014d18  00014d18  2**0
                   CONTENTS, ALLOC, LOAD, DATA
-  3 .stabstr      00000001  000148a5  000148a5  000148a5  2**0
+  3 .stabstr      00000001  00014d19  00014d19  00014d19  2**0
                   CONTENTS, ALLOC, LOAD, DATA
   4 .data         000005e4  00015000  00015000  00015000  2**2
                   CONTENTS, ALLOC, LOAD, DATA
@@ -19,11 +19,11 @@ Idx Name          Size      VMA       LMA       File off  Algn
                   CONTENTS, ALLOC, LOAD, DATA
   7 .sbss2        00000000  00015650  00015650  00015650  2**0
                   CONTENTS
-  8 .bss          00003068  00015650  00015650  00015650  2**3
+  8 .bss          000030a8  00015650  00015650  00015650  2**3
                   ALLOC
-  9 .heap         00010000  000186b8  000186b8  00015650  2**0
+  9 .heap         00010000  000186f8  000186f8  00015650  2**0
                   ALLOC
- 10 .stack        00010000  000286b8  000286b8  00015650  2**0
+ 10 .stack        00010000  000286f8  000286f8  00015650  2**0
                   ALLOC
  11 .comment      00000011  00000000  00000000  00015650  2**0
                   CONTENTS, READONLY

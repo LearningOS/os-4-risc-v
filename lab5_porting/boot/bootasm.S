@@ -199,7 +199,7 @@ write_stack_pattern:
     /* init bss section */
     la	a0, _stack_end  /* note the stack grows from top to bottom */
     la	a1, __stack
-    li	a2, 0xABABABAB
+    li	a2, 0x0
     jal	fill_block
 
 
@@ -227,6 +227,9 @@ softwareInterrupt:
 /* For when a trap is fired */
 trap_entry:
 	/* Check for interrupt */
+	/*li 		t0, 0x00010000*/
+	/*csrs    mstatus, t0*/
+
 	addi	sp, sp, -REGBYTES
 	STORE	t0, 0x0(sp)
 	csrr	t0, mcause
@@ -235,9 +238,22 @@ trap_entry:
 	addi	sp, sp, REGBYTES
 
 	/* System call and other traps */
-	addi sp, sp, -REGBYTES*33
+
+	blt	t0,x0,frkern
+	mv 	t2, sp
+	mv  sp, t1
+	j fruser
+frkern:
+	addi sp, sp, -REGBYTES*34
 	STORE x1, 0*REGBYTES(sp)
 	STORE x2, 1*REGBYTES(sp)
+	j con
+fruser:
+	addi sp, sp, -REGBYTES*34
+	STORE x1, 0*REGBYTES(sp)
+	STORE t2, 1*REGBYTES(sp)
+	j con
+con:
 	STORE x3, 2*REGBYTES(sp)
 	STORE x4, 3*REGBYTES(sp)
 	STORE x5, 4*REGBYTES(sp)
@@ -272,6 +288,7 @@ trap_entry:
 	csrr t2, mepc
 	STORE t2, 32*REGBYTES(sp)
 	mv a0, sp
+
 
 	csrr a1, mcause
 	csrr a2, mepc
@@ -318,13 +335,17 @@ trap_entry:
 	LOAD x30, 29*REGBYTES(sp)
 	LOAD x31, 30*REGBYTES(sp)
 
-	blt	a0,x0,proc
+	li t3,0
+
+	blt	a0,x0,need_sp
 	LOAD x10, 9*REGBYTES(sp)
-	addi sp, sp, REGBYTES*33
+	addi sp, sp, REGBYTES*34
 	eret
-proc:
+need_sp:
 	LOAD x10, 9*REGBYTES(sp)
 	LOAD sp, 1*REGBYTES(sp)
+	/*li 		t0, 0x00010000*/
+	/*csrc    mstatus, t0*/
 	eret
 /* Fills memory blocks */
 fill_block:

@@ -161,8 +161,8 @@ KINCLUDE	+= kern/debug/ \
 			   kern/fs/    \
 			   kern/process \
 			   kern/schedule \
-			   kern/syscall	\
-			   user/libs
+			   kern/syscall	
+			   
 #			   $(RISCV)/include/spike
 
 KSRCDIR1	+= kern/init \
@@ -177,15 +177,14 @@ KSRCDIR1	+= kern/init \
 			   kern/schedule \
 			   kern/syscall	 \
 			   boot	\
+			   	
 			  
 
 KCFLAGS		+= $(addprefix -I,$(KINCLUDE))
 KSRC		+= $(call listf_cc,$(KSRCDIR1))
-KSRC		+= user/libs/initcode.S \
-			   user/libs/umain.c \
-			   user/exit.c	\
-			   user/libs/ulib.c \
-			   user/libs/syscall.c
+KSRC		+= kern/user/umain.c	\
+			   kern/user/exit.c
+	
 			   
 $(call add_files_cc,$(KSRC),kernel,$(KCFLAGS))#$(call listf_cc,$(KSRC))
 
@@ -200,7 +199,7 @@ $(kernel): tools/kernel.ld
 
 $(kernel): $(KOBJS) #$(UOBJS) $(USER_BINS)
 	@echo + ld $@
-	@$(CC) $(LDFLAGS) $(LIBS) -T tools/kernel.ld -o $@ $(KOBJS) #$(UOBJS)#-b elf32-littleriscv $(USER_BINS)	#$(V)$(LD) $(LDFLAGS) -T tools/kernel.ld -o $@ $(KOBJS) -b binary $(USER_BINS)
+	@$(CC) $(LDFLAGS) $(LIBS) -T tools/kernel.ld -o $@ $(KOBJS) #$(UOBJS)#-b binary	 $(USER_BINS)	#$(V)$(LD) $(LDFLAGS) -T tools/kernel.ld -o $@ $(KOBJS) -b binary $(USER_BINS)
 	@$(OBJDUMP) -S $@ > $(call asmfile,kernel)
 	@$(OBJDUMP) -t $@ | $(SED) '1,/SYMBOL TABLE/d; s/ .* / /; /^$$/d' > $(call symfile,kernel)
 

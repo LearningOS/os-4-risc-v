@@ -33,7 +33,7 @@
 #define SYS_write 			64
 #define SYS_S2M				80
 #define SYS_S2U				81
-#define SYS_exit 			93
+#define SYS_exit 			1
 
 #define SYS_fork            2
 #define SYS_wait            3
@@ -136,6 +136,8 @@ struct rtrapframe {
     uint32_t t6;	//temporary paras
     uint32_t status;
     uint32_t epc;
+
+    uint32_t ksp;
 } __attribute__((packed));
 
 void idt_init(void);

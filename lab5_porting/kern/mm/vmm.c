@@ -193,11 +193,16 @@ int
 dup_mmap(struct mm_struct *to, struct mm_struct *from) {
     assert(to != NULL && from != NULL);
     list_entry_t *list = &(from->mmap_list), *le = list;
+    cprintf("from dir=%08x\n",from->pgdir);
+    cprintf("to dir=%08x\n",to->pgdir);
 
     while ((le = list_prev(le)) != list) {
         struct vma_struct *vma, *nvma;
         vma = le2vma(le, list_link);
+        if(vma->vm_start==0)
+        	continue;
         nvma = vma_create(vma->vm_start, vma->vm_end, vma->vm_flags);
+        cprintf("dup_mmap:%08x->%08x\n",vma->vm_start,vma->vm_end);
         //cprintf("sys_fork\n");
         if (nvma == NULL) {
             return -E_NO_MEM;
@@ -269,13 +274,10 @@ check_vmm(void) {
 static void
 check_vma_struct(void) {
     size_t nr_free_pages_store = nr_free_pages();
-    //cprintf("nrfree=%d\n",nr_free_pages_store);
-        cprintf("nrfree=%d\n",nr_free_pages());
-    //struct Page* pg=alloc_page();
-       // cprintf("pgpa=%08x\n",page2pa(pg));
+
     struct mm_struct *mm = mm_create();
     assert(mm != NULL);
-    cprintf("nrfree=%d\n",nr_free_pages());
+
     int step1 = 10, step2 = step1 * 10;
 
     int i;
@@ -284,13 +286,13 @@ check_vma_struct(void) {
         assert(vma != NULL);
         insert_vma_struct(mm, vma);
     }
-    cprintf("nrfree=%d\n",nr_free_pages());
+
     for (i = step1 + 1; i <= step2; i ++) {
         struct vma_struct *vma = vma_create(i * 5, i * 5 + 2, 0);
         assert(vma != NULL);
         insert_vma_struct(mm, vma);
     }
-    cprintf("nrfree2=%d\n",nr_free_pages());
+
     list_entry_t *le = list_next(&(mm->mmap_list));
 
     for (i = 1; i <= step2; i ++) {
@@ -337,17 +339,16 @@ struct mm_struct *check_mm_struct;
 static void
 check_pgfault(void) {
     size_t nr_free_pages_store = nr_free_pages();
-    //cprintf("nr_free_pages_store=%d\n",nr_free_pages_store);
-        //cprintf("nr_free_pages()%d\n",nr_free_pages());
+
     check_mm_struct = mm_create();
-    //cprintf("nr_free_pages1()%d\n",nr_free_pages());
+
     assert(check_mm_struct != NULL);
     struct mm_struct *mm = check_mm_struct;
     pde_t *pgdir = mm->pgdir = boot_pgdir;
     assert(pgdir[256] == 0);
 
     struct vma_struct *vma = vma_create(0x40000000, 0x40000000+PTSIZE, VM_WRITE);
-    //cprintf("nr_free_pages2()%d\n",nr_free_pages());
+
     assert(vma != NULL);
     insert_vma_struct(mm, vma);
     uintptr_t addr = 0x40000100;
@@ -369,12 +370,7 @@ check_pgfault(void) {
     assert(sum == 0);
 //    cprintf("guilai\n\n\n");
 
-//    pte_t* pte = get_pte(pgdir,0x50000100,0);
-//    struct Page* page=pte2page(*pte);
-//    cprintf("page addr = %08x\n",page);
-    //cprintf("nr_free_pages before()%d\n\n\n",nr_free_pages());
-    //cprintf("nr_free_pages_store=%d\n",nr_free_pages_store);
-    //cprintf("rounddown=%08x\n",ROUNDDOWN(addr, PGSIZE));
+
     page_remove(pgdir, ROUNDDOWN(addr, PGSIZE));
         //cprintf("\n\n\nnr_free_after()%d\n",nr_free_pages());
     free_page(pde2page(pgdir[256]));

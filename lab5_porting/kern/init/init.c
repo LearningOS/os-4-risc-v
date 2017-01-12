@@ -21,6 +21,7 @@ static void lab1_switch_test(void);
 
 int
 kern_init(void) {
+
     extern char edata[], end[];
     memset(edata, 0, end - edata);
 
@@ -28,27 +29,15 @@ kern_init(void) {
 
     const char *message = "(THU.CST) os is loading ...";
     //set_mstatus_field(MSTATUS_PRV,1);
+
     cprintf("%s\n\n", message);
     //cprintf("%08x\n",0x40000000);
     //uint32_t b=0xff;2
     //change_bit(8,&b);
     //cprintf("%d\n\n",b);
     print_kerninfo();
-    //uint32_t b=read_mstatus_field(MSTATUS_PRV);
-    //uint32_t b=0xffff;
-    //set_field(&b,MSTATUS_PRV,2);
-    //cprintf("%08x\n\n",b);
-    grade_backtrace();
-    //uint32_t m=read_mstatus_field(MSTATUS_PRV);
-    //cprintf("m=%08x\n",m);
-    //set_mstatus_field(MSTATUS_PRV,1);
-    //m=read_mstatus_field(MSTATUS_PRV);
-    //cprintf("m=%08x\n",m);
-    //const char *str = "ucore: Hello world!!";
 
-       //strcpy((char *)0x30000100, str);
-       //assert(strcmp((void *)0x30000100, (void *)(0x30000100 + PGSIZE)) == 0);
-       //cprintf("dfsdfsdfsdfs%s\n",(0x30000100));
+    grade_backtrace();
 
 
     pmm_init();                 // init physical memory management
@@ -58,7 +47,7 @@ kern_init(void) {
 
     vmm_init();                 // init virtual memory management
     proc_init();                // init process table
-
+    //main();
     //ide_init();                 // init ide devices
     //swap_init();                // init swap
     //S2M();					// enable irq interrupt

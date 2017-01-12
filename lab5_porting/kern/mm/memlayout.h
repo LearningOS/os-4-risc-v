@@ -68,7 +68,7 @@
  * */
 
 /* All physical memory mapped at this address */
-#define KERNBASE            0xC0000000
+#define KERNBASE            0x0
 #define KMEMSIZE            0x10000000                  // the maximum amount of physical memory
 #define KERNTOP             (KERNBASE + KMEMSIZE)
 
@@ -80,12 +80,12 @@
  * */
 #define VPT                 0xFAC00000
 
-#define KSTACKPAGE          2                           // # of pages in kernel stack
+#define KSTACKPAGE          3                           // # of pages in kernel stack
 #define KSTACKSIZE          (KSTACKPAGE * PGSIZE)       // sizeof kernel stack
 
-#define USERTOP             0x10000000
+#define USERTOP             0x11000000
 #define USTACKTOP           USERTOP
-#define USTACKPAGE          16                        // # of pages in user stack
+#define USTACKPAGE          128                        // # of pages in user stack
 #define USTACKSIZE          (USTACKPAGE * PGSIZE)       // sizeof user stack
 
 #define USERBASE            0x00200000

@@ -179,6 +179,7 @@ unsigned long trapHandler(struct rtrapframe* tf, long cause, long epc, long bada
 	long funRe=0;
 	long returnValue = 0;
 	long sysNum=(long)(tf->a7);
+
 	long args[5];
 	args[0]=(long)(tf->a0);
 	args[1]=(long)(tf->a1);
@@ -187,6 +188,8 @@ unsigned long trapHandler(struct rtrapframe* tf, long cause, long epc, long bada
 	args[4]=(long)(tf->a4);
 	struct rtrapframe *otf = current->tf;
 	current->tf = tf;
+	bool ifuser=tf->t0;
+	funRe=((ifuser==1)?-1:0);
 	switch(cause)
 	{
 		case CAUSE_MACHINE_ECALL:
@@ -198,6 +201,7 @@ unsigned long trapHandler(struct rtrapframe* tf, long cause, long epc, long bada
 			{
 				case SYS_exit:
 				{
+					cprintf("exit\n");
 					sys_exit(args[0]);
 					break;
 				}
@@ -205,6 +209,10 @@ unsigned long trapHandler(struct rtrapframe* tf, long cause, long epc, long bada
 				case SYS_write:
 				{
 					returnValue=sys_write(sysNum,args[0],args[1],args[2]);
+					current->tf=otf;
+						tf->a0 = (uint32_t)returnValue;
+						//asm volatile("csrw mepc, %0"::"r"(epc+4));
+						return funRe;
 					break;
 				}
 
@@ -245,6 +253,7 @@ unsigned long trapHandler(struct rtrapframe* tf, long cause, long epc, long bada
 
 				case SYS_yield:
 				{
+					//cprintf("yield\n");
 					returnValue=sys_yield();
 					break;
 				}
@@ -266,6 +275,9 @@ unsigned long trapHandler(struct rtrapframe* tf, long cause, long epc, long bada
 				case SYS_write:
 				{
 					returnValue = sys_write(sysNum, args[0], args[1], args[2]);
+					current->tf=otf;
+						tf->a0 = (uint32_t)returnValue;
+						return funRe;
 					break;
 				}
 
@@ -307,7 +319,7 @@ unsigned long trapHandler(struct rtrapframe* tf, long cause, long epc, long bada
 		}
 	}
 	//uint32_t sp3=read_sp();
-
+	//cprintf("sysNum=%d\n",sysNum);
 							//cprintf("sp3=%08x\n",sp3);
 	current->tf=otf;
 	tf->a0 = (uint32_t)returnValue;

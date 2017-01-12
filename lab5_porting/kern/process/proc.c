@@ -82,6 +82,7 @@ static int nr_process = 0;
 
 void rkernel_thread_entry(void);
 void rforkrets(struct rtrapframe *tf);
+void urforkrets(struct rtrapframe *tf);
 void rswitch_to(struct rcontext *from, struct rcontext *to);
 void _ustart(void);
 
@@ -122,6 +123,7 @@ alloc_proc(void) {
         memset(proc->name, 0, PROC_NAME_LEN);
         proc->wait_state = 0;
         proc->cptr = proc->optr = proc->yptr = NULL;
+        //proc->ifUser=0;
     }
     return proc;
 }
@@ -244,6 +246,11 @@ forkret(void) {
     rforkrets(current->tf);
 }
 
+static void
+uforkret(void){
+	urforkrets(current->tf);
+}
+
 // hash_proc - add proc into proc hash_list
 static void
 hash_proc(struct proc_struct *proc) {
@@ -287,7 +294,7 @@ kernel_thread(int (*fn)(void *), void *arg, uint32_t clone_flags, bool ifuser) {
 
     tf.gp = _gp;
 
-    return do_fork(clone_flags | (ifuser?0:CLONE_VM), -1, &tf, 0);
+    return do_fork(clone_flags | CLONE_VM, -500, &tf, 0);
 }
 
 // setup_kstack - alloc pages with size KSTACKPAGE as process kernel stack
@@ -391,8 +398,12 @@ copy_thread(struct proc_struct *proc, uintptr_t esp, struct rtrapframe *tf, bool
     proc->tf->sp = esp;
     proc->tf->status |= MSTATUS_IE;
     proc->tf->epc=(ifuser?(proc->tf->epc+4):proc->tf->ra);
-    cprintf("tf->sp=%08x\n",proc->tf->sp);
-    proc->context.pc = (uintptr_t)forkret;
+    proc->tf->ksp=proc->tf-PGSIZE;
+   // cprintf("tf->sp=%08x\n",proc->tf->sp);
+    if(ifuser)
+    	proc->context.pc = (uintptr_t)uforkret;
+    else
+    	proc->context.pc = (uintptr_t)forkret;
     proc->context.sp = (uintptr_t)(proc->tf);
     proc->context.gp = _gp;
 }
@@ -488,13 +499,9 @@ do_exit(int error_code) {
         panic("idleproc exit.\n");
     }
     if (current == initproc) {
-    	asm volatile("nop");
-    	asm volatile("nop");
-    	asm volatile("nop");
+
         panic("initproc exit.\n");
-        asm volatile("nop");
-        asm volatile("nop");
-        asm volatile("nop");
+
     }
     if(current->pid==2)
     	cprintf("end of 2\n");
@@ -552,7 +559,7 @@ load_icode() {
 //        panic("load_icode: current->mm must be empty.\n");
 //    }
 //
-//    int ret = -E_NO_MEM;
+
 	int ret = -E_NO_MEM;
     struct mm_struct *mm;
     //(1) create a new mm for current process
@@ -563,130 +570,39 @@ load_icode() {
     if (setup_pgdir(mm) != 0) {
         goto bad_pgdir_cleanup_mm;
     }
-    //cprintf("load_icode\n");
-    //(3) copy TEXT/DATA section, build BSS parts in binary to memory space of process
-//    struct Page *page;
-//    //(3.1) get the file header of the bianry program (ELF format)
-//    //struct elfhdr *elf = (struct elfhdr *)binary;
-//    //(3.2) get the entry of the program section headers of the bianry program (ELF format)
-//    //struct proghdr *ph = (struct proghdr *)(binary + elf->e_phoff);
-//    //(3.3) This program is valid?
-//    //if (elf->e_magic != ELF_MAGIC) {
-//    //    ret = -E_INVAL_ELF;
-//    //    goto bad_elf_cleanup_pgdir;
-//    //}
-//
-//    uint32_t vm_flags, perm;
-//    vm_flags = 0, perm = PTE_V;
-//    vm_flags |= VM_EXEC;
-//    vm_flags |= VM_WRITE;
-//    vm_flags |= VM_READ;
-//    if (vm_flags & VM_WRITE) perm |= PTE_TYPE_URW_SRW;
+
      uint32_t vm_flags, perm;
 	 vm_flags = 0, perm = PTE_V | PTE_R;
 	 vm_flags |= VM_EXEC;
 	 vm_flags |= VM_WRITE;
 	 vm_flags |= VM_READ;
 	 if (vm_flags & VM_WRITE) perm |= PTE_TYPE_URWX_SRWX;
-//    //struct proghdr *ph_end = ph + elf->e_phnum;
-//    for (; ph < ph_end; ph ++) {
-//    //(3.4) find every program section headers
-//        if (ph->p_type != ELF_PT_LOAD) {
-//            continue ;
-//        }
-//        if (ph->p_filesz > ph->p_memsz) {
-//            ret = -E_INVAL_ELF;
-//            goto bad_cleanup_mmap;
-//        }
-//        if (ph->p_filesz == 0) {
-//            continue ;
-//        }
-//    //(3.5) call mm_map fun to setup the new vma ( ph->p_va, ph->p_memsz)
-//        vm_flags = 0, perm = PTE_V;
-//        if (ph->p_flags & ELF_PF_X) vm_flags |= VM_EXEC;
-//        if (ph->p_flags & ELF_PF_W) vm_flags |= VM_WRITE;
-//        if (ph->p_flags & ELF_PF_R) vm_flags |= VM_READ;
-//        if (vm_flags & VM_WRITE) perm |= PTE_TYPE_URW_SRW;
+
 	 	extern char realend[];
         if ((ret = mm_map(mm, 0, realend, vm_flags, NULL)) != 0) {
             goto bad_cleanup_mmap;
         }
-//        unsigned char *from = binary + ph->p_offset;
-//        size_t off, size;
-//        uintptr_t start = ph->p_va, end, la = ROUNDDOWN(start, PGSIZE);
-//
-//        ret = -E_NO_MEM;
-//
-//     //(3.6) alloc memory, and  copy the contents of every program section (from, from+end) to process's memory (la, la+end)
-//        end = ph->p_va + ph->p_filesz;
-//     //(3.6.1) copy TEXT/DATA section of bianry program
-//        while (start < end) {
-//            if ((page = pgdir_alloc_page(mm->pgdir, la, perm)) == NULL) {
-//                goto bad_cleanup_mmap;
-//            }
-//            off = start - la, size = PGSIZE - off, la += PGSIZE;
-//            if (end < la) {
-//                size -= la - end;
-//            }
-//            memcpy(page2kva(page) + off, from, size);
-//            start += size, from += size;
-//        }
-//
-//      //(3.6.2) build BSS section of binary program
-//        end = ph->p_va + ph->p_memsz;
-//        if (start < la) {
-//            /* ph->p_memsz == ph->p_filesz */
-//            if (start == end) {
-//                continue ;
-//            }
-//            off = start + PGSIZE - la, size = PGSIZE - off;
-//            if (end < la) {
-//                size -= la - end;
-//            }
-//            memset(page2kva(page) + off, 0, size);
-//            start += size;
-//            assert((end < la && start == end) || (end >= la && start == la));
-//        }
-//        while (start < end) {
-//            if ((page = pgdir_alloc_page(mm->pgdir, la, perm)) == NULL) {
-//                goto bad_cleanup_mmap;
-//            }
-//            off = start - la, size = PGSIZE - off, la += PGSIZE;
-//            if (end < la) {
-//                size -= la - end;
-//            }
-//            memset(page2kva(page) + off, 0, size);
-//            start += size;
-//        }
-//    }
-    //(4) build user stack memory
 
-
-
-    //copy_mm(0, current);
 
 
     vm_flags = VM_READ | VM_WRITE ;//| VM_STACK;
     if ((ret = mm_map(mm, USTACKTOP - USTACKSIZE, USTACKSIZE, vm_flags, NULL)) != 0) {
         goto bad_cleanup_mmap;
     }
-    //assert(pgdir_alloc_page(mm->pgdir, USTACKTOP-PGSIZE , PTE_TYPE_URW_SRW) != NULL);
-    //assert(pgdir_alloc_page(mm->pgdir, USTACKTOP-2*PGSIZE , PTE_TYPE_URW_SRW) != NULL);
-    //assert(pgdir_alloc_page(mm->pgdir, USTACKTOP-3*PGSIZE , PTE_TYPE_URW_SRW) != NULL);
-    //assert(pgdir_alloc_page(mm->pgdir, USTACKTOP-4*PGSIZE , PTE_TYPE_URW_SRW) != NULL);
+    assert(pgdir_alloc_page(mm->pgdir, USTACKTOP-PGSIZE , PTE_TYPE_URW_SRW) != NULL);
+    assert(pgdir_alloc_page(mm->pgdir, USTACKTOP-2*PGSIZE , PTE_TYPE_URW_SRW) != NULL);
+    assert(pgdir_alloc_page(mm->pgdir, USTACKTOP-3*PGSIZE , PTE_TYPE_URW_SRW) != NULL);
+    assert(pgdir_alloc_page(mm->pgdir, USTACKTOP-4*PGSIZE , PTE_TYPE_URW_SRW) != NULL);
     
     //(5) set current process's mm, sr3, and set CR3 reg = physical addr of Page Directory
     mm_count_inc(mm);
     current->mm = mm;
     current->cr3 = PADDR(mm->pgdir);
-    asm volatile("nop");
-    asm volatile("nop");
-    asm volatile("nop");
-
+    uint32_t sptbr=read_csr(sptbr);
+    cprintf("sptbr=%08x\n",sptbr);
     lcr3(PADDR(mm->pgdir));
-    asm volatile("nop");
-    asm volatile("nop");
-    asm volatile("nop");
+    sptbr=read_csr(sptbr);
+    cprintf("sptbr=%08x\n",sptbr);
     //boot_map_segment(boot_pgdir, USTACKTOP - PGSIZE, PGSIZE, 0x10000000, PTE_TYPE_URWX_SRWX | PTE_R | PTE_V);
 
 
@@ -709,9 +625,10 @@ load_icode() {
     tf->sp = USTACKTOP;
     //cprintf("loadicode tf=%08x\n",tf);
 
-    asm volatile("mv t2,%0"::"r"((uint32_t)_ustart));
-    asm volatile("sw t2,%0":"=m"(tf->epc):);
-
+//    asm volatile("mv t2,%0"::"r"((uint32_t)_ustart));
+//    asm volatile("sw t2,%0":"=m"(tf->epc):);
+    cprintf("load icode sp=%08x\n",read_sp());
+    tf->epc=(uint32_t)_ustart-4;
    // cprintf("_ustartkuaidaole\n");
     //cprintf("status=%08x\n",tf->ra);
     //cprintf("traphandler tf status=%08x\n",current->tf->status);
@@ -762,6 +679,7 @@ do_execve(const char *name, size_t len) {
         goto execve_exit;
     }
     set_proc_name(current, local_name);
+
     return 0;
 
 execve_exit:
@@ -784,10 +702,10 @@ do_wait(int pid, int *code_store) {
     struct mm_struct *mm = current->mm;
     if (code_store != NULL) {
     cprintf("code_store=%08x\n",code_store);
-        if (!user_mem_check(mm, (uintptr_t)code_store, sizeof(int), 1)) {
-        	cprintf("haha check failed!\n");
-            return -E_INVAL;
-        }
+       // if (!user_mem_check(mm, (uintptr_t)code_store, sizeof(int), 1)) {
+//        	cprintf("haha check failed!\n");
+//            return -E_INVAL;
+//        }
     }
 
     struct proc_struct *proc;
@@ -826,12 +744,23 @@ repeat:
     return -E_BAD_PROC;
 
 found:
+asm volatile("nop");
+    asm volatile("nop");
+    asm volatile("nop");
+    asm volatile("nop");
+    asm volatile("nop");
     if (proc == idleproc || proc == initproc) {
         panic("wait idleproc or initproc.\n");
     }
+
     if (code_store != NULL) {
         *code_store = proc->exit_code;
     }
+    asm volatile("nop");
+    asm volatile("nop");
+    asm volatile("nop");
+    asm volatile("nop");
+    asm volatile("nop");
     local_intr_save(intr_flag);
     {
         unhash_proc(proc);
@@ -840,6 +769,7 @@ found:
     local_intr_restore(intr_flag);
     put_kstack(proc);
     kfree(proc);
+    cprintf("proc->exit_code=%d\n",proc->exit_code);
     return 0;
 }
 
@@ -871,6 +801,8 @@ kernel_execve(const char *name) {//, unsigned char *binary, size_t size
         //: "memory")
     cprintf("kernel_execve: pid = %d, name = \"%s\".\n",        \
                         current->pid, name);
+    //cprintf("before kernen_exe,sp=%08x\n",read_sp());
+    //cprintf("user fork 3rd\n");
     syscall(SYS_exec, name, len);
     return ret;
 }
@@ -919,27 +851,19 @@ user_main(void *arg) {
 static int
 init_main(void *arg) {
     size_t nr_free_pages_store = nr_free_pages();
-    cprintf("nrfree\n");
+    //cprintf("init_main\n");
     size_t kernel_allocated_store = kallocated();
-    asm volatile("nop");
-    asm volatile("nop");
-    asm volatile("nop");
-    asm volatile("nop");
-    asm volatile("nop");
+
     int pid = kernel_thread(user_main, NULL, 0, 1);
     //if (pid <= 0) {
       //  panic("create user_main failed.\n");
    // }
-    asm volatile("nop");
-    asm volatile("nop");
-    asm volatile("nop");
-    asm volatile("nop");
-    asm volatile("nop");
+
     cprintf("init main.\n");
     while (do_wait(0, NULL) == 0) {
     	cprintf("wait success!!\n");
         schedule();
-        //cprintf
+
     }
 
     cprintf("all user-mode processes have quit.\n");
@@ -967,14 +891,16 @@ proc_init(void) {
     if ((idleproc = alloc_proc()) == NULL) {
         panic("cannot alloc idleproc.\n");
     }
+    //cprintf("spt")
 
+       // assert(strlen((const char *)0xffff00) == 5);
     idleproc->pid = 0;
     idleproc->state = PROC_RUNNABLE;
     idleproc->kstack = (uintptr_t)_stack;
     idleproc->need_resched = 1;
     set_proc_name(idleproc, "idle");
     nr_process ++;
-    cprintf("init!!!\n");
+//    cprintf("init!!!\n");
     current = idleproc;
 
     int pid = kernel_thread(init_main, NULL, 0,0);
