@@ -3,13 +3,13 @@ bin/kernel:     file format elf32-littleriscv
 
 Sections:
 Idx Name          Size      VMA       LMA       File off  Algn
-  0 .text         00011dac  00000100  00000100  00000100  2**6
+  0 .text         00011e44  00000100  00000100  00000100  2**6
                   CONTENTS, ALLOC, LOAD, READONLY, CODE
-  1 .rodata       00002e6c  00011eac  00011eac  00011eac  2**2
+  1 .rodata       00002e94  00011f44  00011f44  00011f44  2**2
                   CONTENTS, ALLOC, LOAD, READONLY, DATA
-  2 .stab         00000001  00014d18  00014d18  00014d18  2**0
+  2 .stab         00000001  00014dd8  00014dd8  00014dd8  2**0
                   CONTENTS, ALLOC, LOAD, DATA
-  3 .stabstr      00000001  00014d19  00014d19  00014d19  2**0
+  3 .stabstr      00000001  00014dd9  00014dd9  00014dd9  2**0
                   CONTENTS, ALLOC, LOAD, DATA
   4 .data         000005e4  00015000  00015000  00015000  2**2
                   CONTENTS, ALLOC, LOAD, DATA

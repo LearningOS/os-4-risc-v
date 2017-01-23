@@ -46,7 +46,7 @@ schedule(void) {
         if (next != current) {
         	//proc_print(next);
         	cprintf("sche! proc %d, pc=%08x\n\n",next->pid,next->context.pc);
-            cprintf("sp=%08x\n\n",read_sp());
+            //cprintf("sp=%08x\n\n",read_sp());
             proc_run(next);
         }
     }

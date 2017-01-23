@@ -361,12 +361,24 @@ print_stackframe(void) {
         eip = ((uint32_t *)ebp)[1];
         ebp = ((uint32_t *)ebp)[0];
     }*/
-	uint32_t ra = read_ra();//,
-	//uint32_t mstatus = read_mstatus();
+	//uint32_t ra = read_ra();
+	//uint32_t sp=read_sp();
+	//cprintf("ra=0x%016x\nmstatus=0x%08x\n",ra,mstatus);
 	uint32_t pc=read_pc();
 	uint32_t fp=read_fp();
-	uint32_t sp=read_sp();
+
+	int i,j;
+	for (i = 0; fp != 0 && i < STACKFRAME_DEPTH; i ++) {
+	        cprintf("fp:0x%08x pc:0x%08x args:", fp, pc);
+	        uint32_t *args = (uint32_t *)fp - 8;
+	        for (j = 0; j < 4; j ++) {
+	            cprintf("0x%08x ", args[j]);
+	        }
+	        cprintf("\n");
+	        //print_debuginfo(eip - 1);
+	        pc = *(((uint32_t *)fp)-1);
+	        fp = *(((uint32_t *)fp)-2);
+	}
 	cprintf("print_stackframe OK!\n");
-	//cprintf("ra=0x%016x\nmstatus=0x%08x\n",ra,mstatus);
 }
 
